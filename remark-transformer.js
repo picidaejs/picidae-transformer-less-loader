@@ -20,7 +20,7 @@ module.exports = function (opts) {
     return function search (node) {
         var promises = [Promise.resolve()];
 
-        visit(node, 'code', function (codeNode) {
+        visit(node, 'code', function (codeNode, index, parent) {
             if (codeNode.lang === lang) {
                 var lessCode = toString(codeNode);
                 promises.push(
@@ -29,15 +29,21 @@ module.exports = function (opts) {
                         compress: true
                     })
                     .then(function (output) {
-                        codeNode.data.hChildren.push({
-                            type: 'element',
-                            tagName: 'style',
-                            properties: {type: 'text/css'},
-                            children: [{
+                        parent.children.splice(
+                            index + 1, 0,
+                            {
+                                type: 'html',
+                                value: '<style type="text/css">',
+                            },
+                            {
                                 type: 'text',
                                 value: output.css
-                            }]
-                        })
+                            },
+                            {
+                                type: 'html',
+                                value: '</style>'
+                            }
+                        )
                     })
                     .catch(e => {
                         throw new Error('Picidae-Less-loader: ' + e.message);
